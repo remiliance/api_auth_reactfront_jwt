@@ -1,5 +1,5 @@
 import React from "react";
-//import Cookies from 'universal-cookie'
+import Cookies from 'universal-cookie'
 
 class App extends React.Component {
   //var csrftoken = getCookie('csrftoken');
@@ -20,49 +20,13 @@ class App extends React.Component {
   }
 
 
-
-
-    getCSRF = () => {
-    fetch("http://zoo.com:8000/auth_app/csrf/", {
-    })
-    .then((res) => {
-      let csrfToken = res.headers.get("X-CSRFToken");
-      this.setState({csrf: csrfToken});
-      console.log(csrfToken);
-      console.log('CSRFToken!');
-      return csrfToken
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  }
-
-
   getJWT = () => {
     const message = localStorage.getItem('token');
     if (message!== undefined && message !== null) {
        this.setState({isAuthenticated: true});
     } else {
        this.setState({isAuthenticated: false});
-       this.getCSRF();
     }
-  }
-
-  whoami = () => {
-  const token = localStorage.getItem('token');
-    fetch("http://zoo.com:8000/auth_app/whoami/", {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": 'Token ' + token
-      },
-    })
-    .then((res) => res.json())
-    .then((data) => {
-      console.log("You are logged in as: " + data.username);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
   }
 
   handlePasswordChange = (event) => {
@@ -87,10 +51,7 @@ class App extends React.Component {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-         "X-CSRFToken": this.getCSRF(),
-
       },
-      //credentials: 'include',
       body: JSON.stringify({username: this.state.username, password: this.state.password}),
     })
     .then(this.isResponseOk)
@@ -99,6 +60,9 @@ class App extends React.Component {
       this.setState({isAuthenticated: true, username: "", password: "", error: ""});
     localStorage.clear();
     localStorage.setItem('token', (data.token));
+    sessionStorage.setItem('token', (data.token));
+    const cookies = new Cookies();
+    cookies.set('token', data.token)
     })
     .catch((err) => {
       console.log(err);
@@ -107,22 +71,12 @@ class App extends React.Component {
   }
 
   logout = () => {
-    const token = localStorage.getItem('token');
-    fetch("http://zoo.com:8000/auth_app/logout", {
-        headers: {
-        "Content-Type": "application/json",
-        "Authorization": 'Token ' + token
-      },
-    })
-    .then(this.isResponseOk)
-    .then((data) => {
-      console.log(data);
       this.setState({isAuthenticated: false});
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-  };
+      localStorage.clear();
+      sessionStorage.clear();
+      const cookies = new Cookies();
+      cookies.set("token", "");
+    };
 
    tiger = () => {
    const token = localStorage.getItem('token');
@@ -141,6 +95,42 @@ class App extends React.Component {
     });
   };
 
+ tiger_post = () => {
+   const token = localStorage.getItem('token');
+    fetch("http://zoo.com:8000/api/tiger/test_tiger_post/", {
+    method: "POST",
+        headers: {
+        "Content-Type": "application/json",
+        "Authorization": 'Token ' + token
+      },
+    })
+    .then(this.isResponseOk)
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  };
+
+
+  lion_post = () => {
+  const token = localStorage.getItem('token');
+    fetch("http://zoo.com:9000/api/lion/test_lion_post/", {
+    method: "POST",
+       headers: {
+        "Content-Type": "application/json",
+        "Authorization": 'Token ' + token
+      },
+    })
+    .then(this.isResponseOk)
+    .then((data) => {
+      console.log(data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  };
 
   lion = () => {
   const token = localStorage.getItem('token');
@@ -159,16 +149,16 @@ class App extends React.Component {
     });
   };
 
-
-
   render() {
     if (!this.state.isAuthenticated) {
       return (
         <div className="container mt-3">
-          <h1>React Cookie Auth</h1>
+          <h1>React JWT Auth</h1>
           <br />
-          <button className="btn btn-primary mr-3" onClick={this.tiger}>Tiger</button>
-          <button className="btn btn-primary mr-3" onClick={this.lion}>Lion</button>
+          <button className="btn btn-primary mr-3" onClick={this.tiger}>GET_Tiger_8000</button>
+          <button className="btn btn-primary mr-3" style = {{backgroundColor:'green'}} onClick={this.tiger_post}>POST_Tiger_8000</button>
+          <button className="btn btn-primary mr-3" onClick={this.lion}>GET_Lion_9000</button>
+          <button className="btn btn-primary mr-3" style = {{backgroundColor:'green'}} onClick={this.lion_post}>POST_Lion_9000</button>
           <h2>Login</h2>
           <form onSubmit={this.login}>
             <div className="form-group">
@@ -193,12 +183,13 @@ class App extends React.Component {
     }
     return (
       <div className="container mt-3">
-        <h1>React Cookie Auth</h1>
+        <h1>React JWT Auth</h1>
         <p>You are logged in!</p>
-        <button className="btn btn-primary mr-2" onClick={this.whoami}>WhoAmI</button>
         <button className="btn btn-primary mr-3" onClick={this.logout}>Log out</button>
-        <button className="btn btn-primary mr-3" onClick={this.tiger}>Tiger</button>
-        <button className="btn btn-primary mr-3" onClick={this.lion}>Lion</button>
+         <button className="btn btn-primary mr-3" onClick={this.tiger}>GET_Tiger_8000</button>
+          <button className="btn btn-primary mr-3" style = {{backgroundColor:'green'}} onClick={this.tiger_post}>POST_Tiger_8000</button>
+          <button className="btn btn-primary mr-3" onClick={this.lion}>GET_Lion_9000</button>
+          <button className="btn btn-primary mr-3" style = {{backgroundColor:'green'}} onClick={this.lion_post}>POST_Lion_9000</button>
       </div>
     )
   }
